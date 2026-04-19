@@ -1,0 +1,35 @@
+# --- Recursive Ignores (Matches everywhere) ---
+node_modules/
+**/__pycache__/
+dist/
+dist-ssr/
+*.log
+.DS_Store
+
+# --- Backend Specific ---
+.venv/
+backend/services/.env
+backend/ir_models
+
+# --- Root/Database Specific ---
+*.db
+*.sqlite
+
+# --- Environment & Logs ---
+.env
+*.local
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# --- Editor & IDE Files ---
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
