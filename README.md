@@ -80,4 +80,10 @@ npm run dev
 4. Select one of the learning modes from the main menu and start exploring!
 
 ---
+
+Demo - 
+
+https://drive.google.com/file/d/1UP7VxUEexJeM9BdUiT9x0mjymT-j0IB_/view?usp=sharing
+
+
 *Note: Make sure your webcam is enabled and you have sufficient lighting when using the Gesture Quiz feature.*
