@@ -6,8 +6,6 @@ import torchvision.transforms as transforms
 from PIL import Image
 import os
 
-# --- YOU MUST DEFINE OR IMPORT HierarchicalResNet HERE ---
-# Here is a placeholder so the code runs. Replace it with your actual class!
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 class HierarchicalResNet(nn.Module):
     def __init__(self, num_parent_classes, num_child_classes, weight_path=None):
@@ -33,7 +31,7 @@ class HierarchicalResNet(nn.Module):
             # Transfer weights to our new structure
             self.resnet.load_state_dict(temp_model.resnet.state_dict() if hasattr(temp_model, 'resnet') else {k.replace('resnet.', ''): v for k, v in temp_model.state_dict().items() if 'fc' not in k})
             self.parent_head.load_state_dict(temp_model.fc.state_dict())
-            print("✓ Backbone and Parent Head weights loaded.")
+            print("[OK] Backbone and Parent Head weights loaded.")
 
     def forward(self, x):
         # Shared features from backbone
@@ -63,7 +61,7 @@ def load_weights_robust(model_obj, weight_path):
 
     # Load with strict=False to ignore the parent_head if it wasn't in the child model save
     model_obj.load_state_dict(new_state_dict, strict=False)
-    print(f"✓ Successfully loaded: {os.path.basename(weight_path)}")
+    print(f"[OK] Successfully loaded: {os.path.basename(weight_path)}")
     return model_obj
 
 class CVModelService:
@@ -71,30 +69,34 @@ class CVModelService:
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         print(f"Using device: {self.device}")
         
-        self.parent_classes = ['Land Animals', 'Birds', 'Fruits', 'Sea Animals', 'Vehicles']
+        self.parent_classes = ['Birds', 'Fruits', 'Land Animals', 'Sea Animals', 'Veggies', 'Vehicles']
         
         self.child_classes = {
+            'birds': ['Albatross', 'Auklet', 'Blackbird', 'Bunting', 'Crow', 'Cuckoo', 'Flycatcher', 'Grebe', 'Gull', 'Hummingbird', 'Sparrow'],
             'fruits': ['apple', 'banana', 'carambola', 'dragon fruit', 'guava', 'kiwi', 'mango', 'muskmelon', 'orange', 'peach', 'pear', 'pomegranate'],
+            'veggies': ['brinjal', 'garlic', 'green chilli', 'ladies finger', 'onion', 'potato'],
             'vehicles': ['bikes', 'bus', 'cars', 'scooter', 'truck'],
-            'land animals': ['bear', 'camel', 'cat', 'cow', 'deer', 'dog', 'elephant', 'horse', 'leopard', 'lion', 'monkey', 'rabbit', 'tiger'],
             'sea animals': ['Clams', 'Corals', 'Crabs', 'Dolphin', 'Eel', 'Fish', 'Jelly Fish', 'Lobster', 'Octopus', 'Penguin', 'Seahorse', 'Sharks', 'Whale'],
-            'birds': ['Albatross', 'Auklet', 'Blackbird', 'Bunting', 'Crow', 'Cuckoo', 'Flycatcher', 'Grebe', 'Gull', 'Hummingbird', 'Sparrow']
+            'land animals': ['bear', 'camel', 'cat', 'cow', 'deer', 'dog', 'elephant', 'horse', 'leopard', 'lion', 'monkey', 'rabbit', 'tiger']
         }
         
         # Assuming you will place the models in 'e:\Projects\EduVision\backend\ir_models'
         MODELS_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "ir_models"))
         
-        main_parent_model = os.path.join(MODELS_DIR, 'resnet_finetuned.pth')
-        birds_model = os.path.join(MODELS_DIR, 'child_birds_model.pth')
-        fruits_model = os.path.join(MODELS_DIR, 'fruits_child.pth')
-        sea_animals_model = os.path.join(MODELS_DIR, 'child_sea_animals_model.pth')
-        land_animals_model = os.path.join(MODELS_DIR, 'child_land_animal_model.pth')
-        vehicles_model = os.path.join(MODELS_DIR, 'child_vehicle_model.pth')
+        main_parent_model = os.path.join(MODELS_DIR, 'resnet_finetuned_new latest.pth')
+        birds_model = os.path.join(MODELS_DIR, 'child_birds_model_new_latest.pth')
+        fruits_model = os.path.join(MODELS_DIR, 'child_fruits_model_new_latest.pth')
+        veggies_model = os.path.join(MODELS_DIR, 'child_veggies_model_new_latest.pth')
+        sea_animals_model = os.path.join(MODELS_DIR, 'child_sea_animal_model_new_latest.pth')
+        land_animals_model = os.path.join(MODELS_DIR, 'child_land_animal_model_new_latest.pth')
+        vehicles_model = os.path.join(MODELS_DIR, 'child_vehicles_model_new_latest.pth')
+        
+        num_parents = len(self.parent_classes)
         
         # 1. Initialize & Load Parent
         self.parent_model = models.resnet18(weights=None)
         num_ftrs = self.parent_model.fc.in_features
-        self.parent_model.fc = nn.Linear(num_ftrs, 5) # 5 parent classes
+        self.parent_model.fc = nn.Linear(num_ftrs, num_parents)
         
         try:
             self.parent_model.load_state_dict(torch.load(main_parent_model, map_location=self.device))
@@ -108,45 +110,50 @@ class CVModelService:
         self.child_models_dict = {}
         
         try:
-            fruit_model_obj = HierarchicalResNet(5, len(self.child_classes['fruits'])).to(self.device)
+            fruit_model_obj = HierarchicalResNet(num_parents, len(self.child_classes['fruits'])).to(self.device)
             load_weights_robust(fruit_model_obj, fruits_model)
             self.child_models_dict['fruits'] = fruit_model_obj
         except Exception as e:
             print(f"Error loading fruits model: {e}")
             
         try:
-            bird_model_obj = HierarchicalResNet(5, len(self.child_classes['birds'])).to(self.device)
+            veggies_model_obj = HierarchicalResNet(num_parents, len(self.child_classes['veggies'])).to(self.device)
+            load_weights_robust(veggies_model_obj, veggies_model)
+            self.child_models_dict['veggies'] = veggies_model_obj
+        except Exception as e:
+            print(f"Error loading veggies model: {e}")
+            
+        try:
+            bird_model_obj = HierarchicalResNet(num_parents, len(self.child_classes['birds'])).to(self.device)
             load_weights_robust(bird_model_obj, birds_model)
             self.child_models_dict['birds'] = bird_model_obj
         except Exception as e:
             print(f"Error loading birds model: {e}")
             
         try:
-            land_animal_model_obj = HierarchicalResNet(5, len(self.child_classes['land animals'])).to(self.device)
+            land_animal_model_obj = HierarchicalResNet(num_parents, len(self.child_classes['land animals'])).to(self.device)
             load_weights_robust(land_animal_model_obj, land_animals_model)
             self.child_models_dict['land animals'] = land_animal_model_obj
         except Exception as e:
             print(f"Error loading land animals model: {e}")
             
         try:
-            sea_animal_model_obj = HierarchicalResNet(5, len(self.child_classes['sea animals'])).to(self.device)
+            sea_animal_model_obj = HierarchicalResNet(num_parents, len(self.child_classes['sea animals'])).to(self.device)
             load_weights_robust(sea_animal_model_obj, sea_animals_model)
             self.child_models_dict['sea animals'] = sea_animal_model_obj
         except Exception as e:
             print(f"Error loading sea animals model: {e}")
             
         try:
-            vehicle_model_obj = HierarchicalResNet(5, len(self.child_classes['vehicles'])).to(self.device)
+            vehicle_model_obj = HierarchicalResNet(num_parents, len(self.child_classes['vehicles'])).to(self.device)
             load_weights_robust(vehicle_model_obj, vehicles_model)
             self.child_models_dict['vehicles'] = vehicle_model_obj
         except Exception as e:
             print(f"Error loading vehicles model: {e}")
             
-        # Transform logic
+        # Transform logic - using the exact transform from your script
         self.inference_transform = transforms.Compose([
             transforms.Resize((224, 224)),
-            transforms.RandomHorizontalFlip(),
-            transforms.RandomRotation(15), 
             transforms.ToTensor(),
             transforms.Normalize([0.485, 0.456, 0.406], [0.229, 0.224, 0.225])
         ])

@@ -1,28 +1,43 @@
 # --- Recursive Ignores (Matches everywhere) ---
 node_modules/
-**/__pycache__/
+__pycache__/
+*.py[cod]
+*$py.class
 dist/
 dist-ssr/
+build/
 *.log
 .DS_Store
+Thumbs.db
+
+# --- Large Files & Archives ---
+*.zip
+*.tar.gz
+*.rar
+*.7z
 
 # --- Backend Specific ---
 .venv/
-backend/services/.env
-backend/ir_models
+venv/
+env/
+backend/ir_models/
+.pytest_cache/
+.coverage
+htmlcov/
 
-# --- Root/Database Specific ---
+# --- Test Data & Assets ---
+test_images/
+backend/testing data/
+
+# --- Database Specific ---
 *.db
 *.sqlite
+*.sqlite3
 
-# --- Environment & Logs ---
+# --- Environment Variables & Secrets ---
 .env
+.env.*
 *.local
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
 # --- Editor & IDE Files ---
 .vscode/*
@@ -33,3 +48,5 @@ lerna-debug.log*
 *.njsproj
 *.sln
 *.sw?
+
+TECHNICAL_FEATURES_SCRIPT.md

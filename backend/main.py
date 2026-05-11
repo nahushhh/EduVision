@@ -3,10 +3,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 import os
 from . import models, database
-from .routers import discovery
+from .routers import discovery, story, gesture
+from .seed_images import run_seeder
 
 # Create DB tables
 models.Base.metadata.create_all(bind=database.engine)
+
+# Seed test images into the DB (idempotent — safe to run on every startup)
+run_seeder()
 
 app = FastAPI(title="EduVision Backend")
 
@@ -19,13 +23,14 @@ app.add_middleware(
 )
 
 app.include_router(discovery.router, prefix="/api/discovery", tags=["Discovery Phase 1"])
+app.include_router(story.router, prefix="/api/story", tags=["Story Phase 2"])
+app.include_router(gesture.router, prefix="/api/gesture", tags=["Gesture Phase 3"])
 
 # Serve images over HTTP so the React UI can display them
 STATIC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "test_images"))
-# Check to prevent crash if directory isn't created yet
 if not os.path.exists(STATIC_DIR):
     os.makedirs(STATIC_DIR)
-    
+
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 
 @app.get("/")

@@ -2,7 +2,6 @@ from pydantic import BaseModel
 from typing import Optional, List
 
 class StartSessionRequest(BaseModel):
-    user_id: int
     session_type: str = "discovery"
 
 class StartSessionResponse(BaseModel):
@@ -26,3 +25,16 @@ class PreFedImage(BaseModel):
 
 class PreFedImageList(BaseModel):
     images: List[PreFedImage]
+
+# --- Story Mode Schemas ---
+
+class StoryClickRequest(BaseModel):
+    story_id: int
+    scene_id: int
+    click_x_ratio: float  # Percentage of width (0.0 to 1.0)
+    click_y_ratio: float  # Percentage of height (0.0 to 1.0)
+
+class StoryClickResponse(BaseModel):
+    is_correct: bool
+    message: str
+    detected_class: Optional[str] = None

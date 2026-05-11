@@ -4,3 +4,5 @@ sqlalchemy
 pydantic
 pydantic-settings
 python-multipart
+mediapipe==0.10.14
+tf-keras
